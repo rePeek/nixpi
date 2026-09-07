@@ -184,16 +184,28 @@
       ];
 
       # Wrap pi with the baked-in config
-      pi-with-config = pkgs.symlinkJoin {
-        name = "pi-with-config";
-        paths = [ pkgs.pi-coding-agent ];
-        buildInputs = [ pkgs.makeWrapper ];
-        postBuild = ''
-          wrapProgram $out/bin/pi \
-            --set PI_CODING_AGENT_DIR "${agentDir}" \
-            --set PI_SKIP_VERSION_CHECK "1" \
-            --set PI_OFFLINE "1" \
-            --set PI_FFF_MODE "override"
+      pi-with-config = pkgs.writeShellApplication {
+        name = "pi";
+        runtimeInputs = [ pkgs.pi-coding-agent pkgs.coreutils ];
+        text = ''
+          export PI_CODING_AGENT_DIR="''${PI_CODING_AGENT_DIR:-"$HOME/.pi/agent"}"
+          export PI_SKIP_VERSION_CHECK=1
+          export PI_OFFLINE=1
+          export PI_FFF_MODE=override
+
+          # Ensure agent directory exists and is populated
+          mkdir -p "$PI_CODING_AGENT_DIR/themes" "$PI_CODING_AGENT_DIR/extensions/pi-tool-display"
+
+          for f in settings.json hashline.json pi-codex-search.json web-search.json; do
+            [ -f "$PI_CODING_AGENT_DIR/$f" ] || cp "${agentDir}/$f" "$PI_CODING_AGENT_DIR/$f"
+          done
+          [ -f "$PI_CODING_AGENT_DIR/themes/dracula.json" ] || \
+            cp "${agentDir}/themes/dracula.json" "$PI_CODING_AGENT_DIR/themes/dracula.json"
+          [ -f "$PI_CODING_AGENT_DIR/extensions/pi-tool-display/config.json" ] || \
+            cp "${agentDir}/extensions/pi-tool-display/config.json" \
+              "$PI_CODING_AGENT_DIR/extensions/pi-tool-display/config.json"
+
+          exec pi "$@"
         '';
         meta = {
           mainProgram = "pi";
