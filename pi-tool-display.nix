@@ -1,0 +1,42 @@
+# pi-tool-display plugin: compact tool-call rendering and diff visualization.
+{
+  name = "extensions/pi-tool-display/config.json";
+  config = {
+    debug = false;
+
+    # 避免与 pi-fff (grep/find/ls) 和 pi-hashline-edit (read/edit) 冲突。
+    registerToolOverrides = {
+      read = false;
+      grep = false;
+      find = false;
+      ls = false;
+      bash = true;
+      edit = false;
+      write = true;
+    };
+
+    customToolOverrides = { };
+
+    enableNativeUserMessageBox = true;
+
+    readOutputMode = "hidden";
+    searchOutputMode = "hidden";
+    mcpOutputMode = "hidden";
+
+    previewLines = 8;
+    expandedPreviewMaxLines = 4000;
+
+    bashOutputMode = "opencode";
+    bashCollapsedLines = 10;
+
+    diffViewMode = "auto";
+    diffIndicatorMode = "bars";
+    diffSplitMinWidth = 120;
+    diffCollapsedLines = 24;
+    diffWordWrap = true;
+
+    showTruncationHints = false;
+    showRtkCompactionHints = false;
+  };
+  package = "npm:pi-tool-display@0.5.0";
+}
