@@ -1,6 +1,5 @@
 # pi-tool-display plugin: compact tool-call rendering and diff visualization.
 {
-  name = "extensions/pi-tool-display/config.json";
   config = {
     debug = false;
 

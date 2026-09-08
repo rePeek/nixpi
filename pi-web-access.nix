@@ -1,6 +1,5 @@
 # pi-web-access plugin: web search, GitHub cloning and media extraction.
 {
-  name = "web-search.json";
   config = {
     provider = "openai";
     workflow = "none";

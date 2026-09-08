@@ -1,6 +1,5 @@
 # pi-hashline-edit plugin: stable line anchors for edit tool calls.
 {
-  name = "hashline.json";
   config = {
     hashLength = 3;
     grep = false;

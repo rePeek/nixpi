@@ -3,7 +3,6 @@
 #
 # Pixel-perfect Dracula colors.
 {
-  name = "themes/dracula.json";
   themeName = "dracula";
   config = {
     name = "dracula";
@@ -91,5 +90,4 @@
       infoBg = "#3a3728";
     };
   };
-  package = null;
 }

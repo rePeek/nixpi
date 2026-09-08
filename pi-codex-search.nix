@@ -1,6 +1,5 @@
 # pi-codex-search plugin: explicit Codex subscription web search tool.
 {
-  name = "pi-codex-search.json";
   config = {
     enabled = true;
     standaloneEnabled = false;
