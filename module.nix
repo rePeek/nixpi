@@ -32,6 +32,7 @@ let
     rm -f "$PI_CODING_AGENT_DIR/${relativePath}"
     ln -s "$PI_CONFIG_DIR/${relativePath}" "$PI_CODING_AGENT_DIR/${relativePath}"
   '';
+
 in
 {
   imports = [ wlib.modules.default ];

@@ -3,7 +3,7 @@
   "workflow": "none",
   "allowBrowserCookies": false,
   "webSearch": {
-    "enabled": false
+    "enabled": true
   },
   "githubClone": {
     "enabled": true,
