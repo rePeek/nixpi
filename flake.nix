@@ -17,7 +17,7 @@
       wrapper = wrappers.lib.evalModule module;
       devOptions = {
         agentDirDefault = "$HOME/.pi/agent-dev";
-        mutableConfig = true;
+        configDir = "$PWD/config";
       };
     in
     {
@@ -25,13 +25,6 @@
       overlays.default = final: prev: {
         pi = wrapper.config.wrap { pkgs = prev; };
       };
-
-      # Export the raw module for consumers who want full control.
-      wrapperModules.default = module;
-
-      # Expose the evaluated wrapper config for .wrap / .apply / .eval.
-      wrappers.default = wrapper.config;
-      wrappers.dev = wrapper.config.apply devOptions;
 
       # Packages: the wrapped pi derivation for each system.
       packages = forAllSystems (
@@ -56,12 +49,5 @@
           program = "${self.packages.${system}.pi-dev}/bin/pi";
         };
       });
-
-      # Home Manager integration: install the wrapped pi.
-      homeManagerModules.default =
-        { pkgs, ... }:
-        {
-          home.packages = [ (wrapper.config.wrap { inherit pkgs; }) ];
-        };
     };
 }

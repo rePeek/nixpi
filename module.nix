@@ -1,7 +1,8 @@
-# Pi coding agent — a simple nix-wrapper-modules wrapper.
+# Pi coding agent wrapper.
 #
-# The generated JSON files live in the Nix store. At runtime they are linked
-# into PI_CODING_AGENT_DIR, which remains writable for pi's sessions and auth.
+# Nix wraps the pi executable. All pi and plugin configuration is plain content
+# under ./config: the default package uses its immutable store snapshot, while
+# pi-dev reads ./config from the current working directory.
 {
   config,
   lib,
@@ -10,79 +11,48 @@
   ...
 }:
 let
-  jsonType = wlib.types.structuredValueWith { typeName = "JSON"; };
+  configFiles = [
+    "settings.json"
+    "hashline.json"
+    "web-search.json"
+    "pi-codex-search.json"
+    "extensions/pi-tool-display/config.json"
+    "themes/dracula.json"
+  ];
 
-  # Fixed plugin/theme declarations. Add or remove a plugin here explicitly.
-  plugins = {
-    hashline = import ./pi-hashline.nix;
-    fff = import ./pi-fff.nix;
-    webAccess = import ./pi-web-access.nix;
-    codexSearch = import ./pi-codex-search.nix;
-    toolDisplay = import ./pi-tool-display.nix;
-    theme = import ./theme.nix;
-  };
-
-  # The theme has package = null, so it is excluded automatically.
-  packages = map (plugin: plugin.package) (
-    builtins.filter (plugin: plugin.package or null != null) (builtins.attrValues plugins)
-  );
-
-  settings = config.settings // {
-    inherit packages;
-    theme = plugins.theme.themeName;
-  };
-
-  # A mutable file is copied from the store once; an immutable file is always
-  # replaced with a store symlink. `key` matches an entry in constructFiles.
-  installConfig = key: relativePath:
-    if config.mutableConfig then
-      ''
-        mkdir -p "$PI_CODING_AGENT_DIR/$(dirname "${relativePath}")"
-        # Switching from immutable to mutable: replace the old store symlink.
-        if [ -L "$PI_CODING_AGENT_DIR/${relativePath}" ]; then
-          rm "$PI_CODING_AGENT_DIR/${relativePath}"
-        fi
-        # Keep later user edits; copy the Nix default only when it is absent.
-        if [ ! -e "$PI_CODING_AGENT_DIR/${relativePath}" ]; then
-          cp "${config.constructFiles.${key}.path}" "$PI_CODING_AGENT_DIR/${relativePath}"
-          chmod u+w "$PI_CODING_AGENT_DIR/${relativePath}"
-        fi
-      ''
-    else
-      ''
-        mkdir -p "$PI_CODING_AGENT_DIR/$(dirname "${relativePath}")"
-        rm -f "$PI_CODING_AGENT_DIR/${relativePath}"
-        ln -s "${config.constructFiles.${key}.path}" "$PI_CODING_AGENT_DIR/${relativePath}"
-      '';
+  linkConfig = relativePath: ''
+    if [ ! -f "$PI_CONFIG_DIR/${relativePath}" ]; then
+      echo "pi: missing config file: $PI_CONFIG_DIR/${relativePath}" >&2
+      exit 1
+    fi
+    mkdir -p "$PI_CODING_AGENT_DIR/$(dirname "${relativePath}")"
+    rm -f "$PI_CODING_AGENT_DIR/${relativePath}"
+    ln -s "$PI_CONFIG_DIR/${relativePath}" "$PI_CODING_AGENT_DIR/${relativePath}"
+  '';
 in
 {
   imports = [ wlib.modules.default ];
 
-  # Only core settings are an option. Override them through `.wrap { settings = ...; }`.
-  options.settings = lib.mkOption {
-    type = jsonType;
-    default = import ./settings.nix;
-    description = "Core pi settings, such as provider, model, and thinking level.";
-  };
+  options = {
+    agentDirDefault = lib.mkOption {
+      type = lib.types.str;
+      default = "$HOME/.pi/agent";
+      example = "$HOME/.pi/agent-dev";
+      description = ''
+        Default writable pi state directory. PI_CODING_AGENT_DIR takes precedence
+        when it is already set in the environment.
+      '';
+    };
 
-  options.agentDirDefault = lib.mkOption {
-    type = lib.types.str;
-    default = "$HOME/.pi/agent";
-    example = "$HOME/.pi/agent-dev";
-    description = ''
-      Default writable pi agent directory. PI_CODING_AGENT_DIR takes precedence
-      when it is already set in the environment.
-    '';
-  };
-
-  options.mutableConfig = lib.mkOption {
-    type = lib.types.bool;
-    default = false;
-    description = ''
-      Copy all generated JSON configuration files into the writable agent directory
-      on first use. Later manual edits persist. When disabled, files are read-only
-      symlinks to their Nix store versions.
-    '';
+    configDir = lib.mkOption {
+      type = lib.types.str;
+      default = toString ./config;
+      example = "$PWD/config";
+      description = ''
+        Directory containing settings.json and plugin configuration files.
+        PI_CONFIG_DIR takes precedence when it is already set in the environment.
+      '';
+    };
   };
 
   config = {
@@ -90,52 +60,25 @@ in
     unsetVar = lib.mkDefault [ "DEV" ];
     runtimePkgs = [ pkgs.coreutils ];
 
-    envDefault = lib.mkDefault {
+    # Wrapper policy; plugin-specific variables belong in config/env.sh.
+    envDefault = {
       PI_SKIP_VERSION_CHECK = "1";
       PI_OFFLINE = "1";
-      PI_FFF_MODE = plugins.fff.env.PI_FFF_MODE;
     };
 
-    # Files embedded in the wrapped pi package under share/pi-config/.
-    constructFiles = {
-      settings = {
-        content = builtins.toJSON settings;
-        relPath = "share/pi-config/settings.json";
-      };
-      hashline = {
-        content = builtins.toJSON plugins.hashline.config;
-        relPath = "share/pi-config/hashline.json";
-      };
-      webSearch = {
-        content = builtins.toJSON plugins.webAccess.config;
-        relPath = "share/pi-config/web-search.json";
-      };
-      codexSearch = {
-        content = builtins.toJSON plugins.codexSearch.config;
-        relPath = "share/pi-config/pi-codex-search.json";
-      };
-      toolDisplay = {
-        content = builtins.toJSON plugins.toolDisplay.config;
-        relPath = "share/pi-config/extensions/pi-tool-display/config.json";
-      };
-      dracula = {
-        content = builtins.toJSON plugins.theme.config;
-        relPath = "share/pi-config/themes/dracula.json";
-      };
-    };
-
-    # Pi needs a writable directory. Files are linked or copied once according
-    # to mutableConfig.
     runShell = [
       ''
         export PI_CODING_AGENT_DIR="''${PI_CODING_AGENT_DIR:-${config.agentDirDefault}}"
+        export PI_CONFIG_DIR="''${PI_CONFIG_DIR:-${config.configDir}}"
+        if [ ! -d "$PI_CONFIG_DIR" ]; then
+          echo "pi: config directory does not exist: $PI_CONFIG_DIR" >&2
+          exit 1
+        fi
+        if [ -f "$PI_CONFIG_DIR/env.sh" ]; then
+          . "$PI_CONFIG_DIR/env.sh"
+        fi
         mkdir -p "$PI_CODING_AGENT_DIR"
-        ${installConfig "settings" "settings.json"}
-        ${installConfig "hashline" "hashline.json"}
-        ${installConfig "webSearch" "web-search.json"}
-        ${installConfig "codexSearch" "pi-codex-search.json"}
-        ${installConfig "toolDisplay" "extensions/pi-tool-display/config.json"}
-        ${installConfig "dracula" "themes/dracula.json"}
+        ${lib.concatMapStringsSep "\n" linkConfig configFiles}
       ''
     ];
   };
