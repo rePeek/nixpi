@@ -1,8 +1,7 @@
 # Pi coding agent wrapper.
 #
-# Nix wraps the pi executable. All pi and plugin configuration is plain content
-# under ./config: the default package uses its immutable store snapshot, while
-# pi-dev reads ./config from the current working directory.
+# Plugin descriptors declare external configuration files, environment defaults,
+# and Nix runtime dependencies. Pi reads and installs packages from settings.json.
 {
   config,
   lib,
@@ -11,14 +10,18 @@
   ...
 }:
 let
+  plugins = import ./plugins { inherit pkgs; };
+  pluginMetadata = {
+    configFiles = lib.concatLists (lib.catAttrs "config" plugins);
+    env = lib.foldl' (acc: env: acc // env) { } (lib.catAttrs "env" plugins);
+    runtimePkgs = lib.concatLists (lib.catAttrs "runtimePkgs" plugins);
+  };
+  runtimePackages = [ pkgs.coreutils ] ++ pluginMetadata.runtimePkgs;
+  runtimeBinPath = lib.makeBinPath runtimePackages;
   configFiles = [
     "settings.json"
-    "hashline.json"
-    "web-search.json"
-    "pi-codex-search.json"
-    "extensions/pi-tool-display/config.json"
     "themes/dracula.json"
-  ];
+  ] ++ pluginMetadata.configFiles;
 
   linkConfig = relativePath: ''
     if [ ! -f "$PI_CONFIG_DIR/${relativePath}" ]; then
@@ -39,7 +42,7 @@ in
       default = "$HOME/.pi/agent";
       example = "$HOME/.pi/agent-dev";
       description = ''
-        Default writable pi state directory. PI_CODING_AGENT_DIR takes precedence
+        Default writable Pi state directory. PI_CODING_AGENT_DIR takes precedence
         when it is already set in the environment.
       '';
     };
@@ -49,7 +52,7 @@ in
       default = toString ./config;
       example = "$PWD/config";
       description = ''
-        Directory containing settings.json and plugin configuration files.
+        Directory containing the base settings and plugin configuration files.
         PI_CONFIG_DIR takes precedence when it is already set in the environment.
       '';
     };
@@ -58,24 +61,20 @@ in
   config = {
     package = lib.mkDefault pkgs.pi-coding-agent;
     unsetVar = lib.mkDefault [ "DEV" ];
-    runtimePkgs = [ pkgs.coreutils ];
-
-    # Wrapper policy; plugin-specific variables belong in config/env.sh.
-    envDefault = {
+    runtimePkgs = runtimePackages;
+    envDefault = pluginMetadata.env // {
       PI_SKIP_VERSION_CHECK = "1";
-      PI_OFFLINE = "1";
     };
 
     runShell = [
       ''
+        # Prefer the Nix-provided tools over same-named host executables.
+        export PATH="${runtimeBinPath}:$PATH"
         export PI_CODING_AGENT_DIR="''${PI_CODING_AGENT_DIR:-${config.agentDirDefault}}"
         export PI_CONFIG_DIR="''${PI_CONFIG_DIR:-${config.configDir}}"
         if [ ! -d "$PI_CONFIG_DIR" ]; then
           echo "pi: config directory does not exist: $PI_CONFIG_DIR" >&2
           exit 1
-        fi
-        if [ -f "$PI_CONFIG_DIR/env.sh" ]; then
-          . "$PI_CONFIG_DIR/env.sh"
         fi
         mkdir -p "$PI_CODING_AGENT_DIR"
         ${lib.concatMapStringsSep "\n" linkConfig configFiles}

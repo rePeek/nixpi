@@ -12,7 +12,13 @@
       wrappers,
     }:
     let
-      forAllSystems = with nixpkgs.lib; genAttrs platforms.all;
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       module = ./module.nix;
       wrapper = wrappers.lib.evalModule module;
       devOptions = {
@@ -38,15 +44,17 @@
         }
       );
 
-      # App: run the wrapped pi directly.
+      # Apps run the wrapped packages directly.
       apps = forAllSystems (system: {
         default = {
           type = "app";
           program = "${self.packages.${system}.default}/bin/pi";
+          meta.description = "Pi with a declarative configuration snapshot";
         };
         pi-dev = {
           type = "app";
           program = "${self.packages.${system}.pi-dev}/bin/pi";
+          meta.description = "Pi development environment using the working-tree configuration";
         };
       });
     };
