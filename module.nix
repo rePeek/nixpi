@@ -52,7 +52,6 @@ in
 
   config = {
     package = lib.mkDefault pkgs.pi-coding-agent;
-    unsetVar = lib.mkDefault [ "DEV" ];
     runtimePkgs = map (pkg: { data = pkg; prefix = true; }) runtimePackages;
     envDefault.PI_SKIP_VERSION_CHECK = "1";
 
