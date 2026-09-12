@@ -21,12 +21,6 @@
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       module = ./module.nix;
       wrapper = wrappers.lib.evalModule module;
-      devOptions = {
-        agentDirDefault = "$HOME/.pi/agent-dev";
-        configDir = "$PWD/config";
-        configMode = "mutable";
-        unsetVar = [ "DEV" "PI_CODING_AGENT_DIR" "PI_OFFLINE" ];
-      };
     in
     {
       # Overlay: replace pi with the wrapped version.
@@ -42,7 +36,6 @@
         in
         {
           default = wrapper.config.wrap { inherit pkgs; };
-          pi-dev = wrapper.config.wrap (devOptions // { inherit pkgs; });
         }
       );
 
@@ -52,11 +45,6 @@
           type = "app";
           program = "${self.packages.${system}.default}/bin/pi";
           meta.description = "Pi with Nix-provided runtime";
-        };
-        pi-dev = {
-          type = "app";
-          program = "${self.packages.${system}.pi-dev}/bin/pi";
-          meta.description = "Pi dev environment (separate agent dir)";
         };
       });
     };

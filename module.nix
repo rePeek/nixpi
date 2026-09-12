@@ -1,8 +1,8 @@
 # Pi coding agent — Nix runtime wrapper.
 #
 # Nix provides the executable and stable runtime dependencies (node, npm, rg,
-# git, …). Git/Nix provide managed config files; Pi owns runtime state and
-# installs packages declared by settings.json under the writable agent dir.
+# git, …). Config files are symlinked from the configDir (git working tree)
+# into the Pi agent directory, allowing direct modification and git diff.
 {
   config,
   lib,
@@ -32,7 +32,7 @@ in
     agentDirDefault = lib.mkOption {
       type = lib.types.str;
       default = "$HOME/.pi/agent";
-      example = "$HOME/.pi/agent-dev";
+      example = "$HOME/.pi/agent";
       description = ''
         Default writable Pi state directory. PI_CODING_AGENT_DIR takes precedence
         when it is already set in the environment.
@@ -48,17 +48,6 @@ in
         symlinks into the Pi agent directory.
       '';
     };
-
-    configMode = lib.mkOption {
-      type = lib.types.enum [ "immutable" "mutable" ];
-      default = "immutable";
-      example = "mutable";
-      description = ''
-        How to handle configuration files:
-        - immutable: symlink from a Nix store config snapshot
-        - mutable: symlink from configDir (usually the working tree)
-      '';
-    };
   };
 
   config = {
@@ -72,27 +61,21 @@ in
         export PI_CODING_AGENT_DIR="''${PI_CODING_AGENT_DIR:-${config.agentDirDefault}}"
         mkdir -p "$PI_CODING_AGENT_DIR"
 
-        # Config file management (${config.configMode} mode)
+        # Config file management — symlink from configDir (git working tree)
         PI_CONFIG_DIR="${config.configDir}"
         if [ -d "$PI_CONFIG_DIR" ]; then
           for file in ${lib.concatStringsSep " " configFiles}; do
             target="$PI_CODING_AGENT_DIR/$file"
             source="$PI_CONFIG_DIR/$file"
             if [ -f "$source" ]; then
-              # Always expose managed config as a symlink. In normal mode
-              # configDir is a Nix store snapshot; in dev mode it is the repo
-              # working tree.
+              # Always expose managed config as a symlink to the working tree.
+              # Pi can modify these files directly; changes appear in git diff.
               if [ -L "$target" ]; then
                 rm "$target"
               elif [ -e "$target" ]; then
-                if [ "${config.configMode}" = "immutable" ]; then
-                  backup="$target.pre-nixpi-link.$(date +%s)"
-                  mv "$target" "$backup"
-                  echo "pi: moved existing config to backup: $backup" >&2
-                else
-                  echo "pi: refusing to replace non-symlink config: $target" >&2
-                  exit 1
-                fi
+                backup="$target.pre-nixpi-link.$(date +%s)"
+                mv "$target" "$backup"
+                echo "pi: moved existing config to backup: $backup" >&2
               fi
               ln -s "$source" "$target"
             fi
