@@ -15,7 +15,6 @@ let
     pkgs.coreutils
     pkgs.nodejs
     pkgs.git
-    pkgs.ripgrep
   ];
 
   configFiles = [
