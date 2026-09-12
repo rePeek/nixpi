@@ -1,6 +1,6 @@
 # nixpi — Nix-native Pi Runtime Wrapper
 
-使用 Nix 为 [Pi coding agent](https://github.com/can1357/pi-coding-agent) 提供稳定的运行时环境。Nix 负责可执行文件和系统依赖；扩展安装、`settings.json`、插件配置全部归 Pi 原生管理。
+使用 Nix 为 [Pi coding agent](https://github.com/earendil-works/pi) 提供稳定的运行时环境。Nix 负责可执行文件和系统依赖；扩展安装、`settings.json`、插件配置全部归 Pi 原生管理。
 
 ## 职责划分
 
@@ -40,8 +40,6 @@ nixpi/
 ├── module.nix             # Wrapper 模块：runtime PATH + env
 └── integrations/          # 每个扩展的 Nix 侧集成声明
     ├── default.nix
-    ├── pi-cc-extensions.nix # （目前无 Nix 需求，占位）
-    ├── pi-fff.nix          # env: PI_FFF_MODE=override
     ├── pi-hashline-edit.nix # runtimePkgs: ripgrep
     └── pi-web-access.nix   # runtimePkgs: git
 ```
@@ -92,12 +90,10 @@ Pi 会在启动时自动安装这些扩展。带版本号的包会被 pin 到指
 
 每个 integration 文件描述扩展需要的 **Nix 侧** 需求：
 
-| Integration | env | runtimePkgs |
-|-------------|-----|-------------|
-| `pi-cc-extensions` | — | —（占位，目前无 Nix 需求） |
-| `pi-fff` | `PI_FFF_MODE=override` | — |
-| `pi-hashline-edit` | — | `ripgrep` |
-| `pi-web-access` | — | `git` |
+| Integration | runtimePkgs |
+|-------------|-------------|
+| `pi-hashline-edit` | `ripgrep` |
+| `pi-web-access` | `git` |
 
 添加新集成：在 `integrations/` 下创建 `.nix` 文件并加入 `default.nix` 列表。
 

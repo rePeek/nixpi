@@ -1,5 +1,5 @@
 {
-  description = "Pi coding agent — declarative wrapper using nix-wrapper-modules";
+  description = "Pi coding agent — Nix runtime wrapper";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.wrappers.url = "github:nix-community/nix-wrapper-modules";

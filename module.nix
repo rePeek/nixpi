@@ -22,7 +22,6 @@ let
     pkgs.coreutils
     pkgs.nodejs
   ] ++ integrationMetadata.runtimePkgs;
-  runtimeBinPath = lib.makeBinPath runtimePackages;
 in
 {
   imports = [ wlib.modules.default ];
@@ -42,15 +41,13 @@ in
   config = {
     package = lib.mkDefault pkgs.pi-coding-agent;
     unsetVar = lib.mkDefault [ "DEV" ];
-    runtimePkgs = runtimePackages;
+    runtimePkgs = map (pkg: { data = pkg; prefix = true; }) runtimePackages;
     envDefault = integrationMetadata.env // {
       PI_SKIP_VERSION_CHECK = "1";
     };
 
     runShell = [
       ''
-        # Prefer the Nix-provided tools over same-named host executables.
-        export PATH="${runtimeBinPath}:$PATH"
         export PI_CODING_AGENT_DIR="''${PI_CODING_AGENT_DIR:-${config.agentDirDefault}}"
         mkdir -p "$PI_CODING_AGENT_DIR"
       ''
