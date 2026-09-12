@@ -23,7 +23,6 @@
       wrapper = wrappers.lib.evalModule module;
       devOptions = {
         agentDirDefault = "$HOME/.pi/agent-dev";
-        configDir = "$PWD/config";
       };
     in
     {
@@ -49,12 +48,12 @@
         default = {
           type = "app";
           program = "${self.packages.${system}.default}/bin/pi";
-          meta.description = "Pi with a declarative configuration snapshot";
+          meta.description = "Pi with Nix-provided runtime";
         };
         pi-dev = {
           type = "app";
           program = "${self.packages.${system}.pi-dev}/bin/pi";
-          meta.description = "Pi development environment using the working-tree configuration";
+          meta.description = "Pi dev environment (separate agent dir)";
         };
       });
     };
