@@ -25,6 +25,7 @@
         agentDirDefault = "$HOME/.pi/agent-dev";
         configDir = "$PWD/config";
         configMode = "mutable";
+        unsetVar = [ "DEV" "PI_CODING_AGENT_DIR" "PI_OFFLINE" ];
       };
     in
     {
