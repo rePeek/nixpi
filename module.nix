@@ -1,8 +1,8 @@
 # Pi coding agent — Nix runtime wrapper.
 #
 # Nix provides the executable and stable runtime dependencies (node, npm, rg,
-# git, …). Extension installation, settings.json, and plugin configs are owned
-# by Pi itself (~/.pi/agent/).
+# git, …). Git/Nix provide managed config files; Pi owns runtime state and
+# installs packages declared by settings.json under the writable agent dir.
 {
   config,
   lib,
@@ -45,18 +45,18 @@ in
       example = "$PWD/config";
       description = ''
         Directory containing configuration files. Used as the source for
-        bootstrapping or symlinking into the Pi agent directory.
+        symlinks into the Pi agent directory.
       '';
     };
 
     configMode = lib.mkOption {
-      type = lib.types.enum [ "mutable" "seed" ];
-      default = "seed";
+      type = lib.types.enum [ "immutable" "mutable" ];
+      default = "immutable";
       example = "mutable";
       description = ''
         How to handle configuration files:
-        - mutable: symlink from configDir (changes persist to source)
-        - seed: bootstrap copy from configDir (only if file missing)
+        - immutable: symlink from a Nix store config snapshot
+        - mutable: symlink from configDir (usually the working tree)
       '';
     };
   };
@@ -79,22 +79,22 @@ in
             target="$PI_CODING_AGENT_DIR/$file"
             source="$PI_CONFIG_DIR/$file"
             if [ -f "$source" ]; then
-              if [ "${config.configMode}" = "mutable" ]; then
-                # Mutable mode: symlink (changes persist to source)
-                if [ -L "$target" ]; then
-                  rm "$target"
-                elif [ -e "$target" ]; then
+              # Always expose managed config as a symlink. In normal mode
+              # configDir is a Nix store snapshot; in dev mode it is the repo
+              # working tree.
+              if [ -L "$target" ]; then
+                rm "$target"
+              elif [ -e "$target" ]; then
+                if [ "${config.configMode}" = "immutable" ]; then
+                  backup="$target.pre-nixpi-link.$(date +%s)"
+                  mv "$target" "$backup"
+                  echo "pi: moved existing config to backup: $backup" >&2
+                else
                   echo "pi: refusing to replace non-symlink config: $target" >&2
                   exit 1
                 fi
-                ln -s "$source" "$target"
-              else
-                # Seed mode: bootstrap copy (only if missing)
-                if [ ! -e "$target" ]; then
-                  cp "$source" "$target"
-                  chmod u+w "$target"
-                fi
               fi
+              ln -s "$source" "$target"
             fi
           done
         fi
