@@ -1,11 +1,8 @@
 # Pi coding agent — Nix runtime wrapper.
 #
 # Nix provides the executable and stable runtime dependencies (node, npm, rg,
-# git, …). Config files are symlinked into the Pi agent directory.
-#
-# Two modes:
-# - mutable (default): symlink from configDir (git working tree), Pi can modify directly
-# - immutable: symlink from Nix store snapshot, read-only
+# git, …). Config files are symlinked from configDir (git working tree) into
+# the Pi agent directory, allowing direct modification and git diff.
 {
   config,
   lib,
@@ -51,17 +48,6 @@ in
         symlinks into the Pi agent directory.
       '';
     };
-
-    configMode = lib.mkOption {
-      type = lib.types.enum [ "mutable" "immutable" ];
-      default = "mutable";
-      example = "immutable";
-      description = ''
-        How to handle configuration files:
-        - mutable: symlink from configDir (usually git working tree), Pi can modify directly
-        - immutable: symlink from Nix store snapshot, read-only
-      '';
-    };
   };
 
   config = {
@@ -75,7 +61,7 @@ in
         export PI_CODING_AGENT_DIR="''${PI_CODING_AGENT_DIR:-${config.agentDirDefault}}"
         mkdir -p "$PI_CODING_AGENT_DIR"
 
-        # Config file management (${config.configMode} mode)
+        # Config file management — symlink from configDir (git working tree)
         PI_CONFIG_DIR="${config.configDir}"
         if [ -d "$PI_CONFIG_DIR" ]; then
           for file in ${lib.concatStringsSep " " configFiles}; do
@@ -85,14 +71,9 @@ in
               if [ -L "$target" ]; then
                 rm "$target"
               elif [ -e "$target" ]; then
-                if [ "${config.configMode}" = "immutable" ]; then
-                  backup="$target.pre-nixpi-link.$(date +%s)"
-                  mv "$target" "$backup"
-                  echo "pi: moved existing config to backup: $backup" >&2
-                else
-                  echo "pi: refusing to replace non-symlink config: $target" >&2
-                  exit 1
-                fi
+                backup="$target.pre-nixpi-link.$(date +%s)"
+                mv "$target" "$backup"
+                echo "pi: moved existing config to backup: $backup" >&2
               fi
               ln -s "$source" "$target"
             fi
