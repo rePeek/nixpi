@@ -1,0 +1,20 @@
+{
+  "provider": "openai",
+  "workflow": "none",
+  "allowBrowserCookies": false,
+  "webSearch": {
+    "enabled": true
+  },
+  "githubClone": {
+    "enabled": true,
+    "maxRepoSizeMB": 350,
+    "cloneTimeoutSeconds": 30,
+    "clonePath": "/tmp/pi-github-repos"
+  },
+  "youtube": {
+    "enabled": false
+  },
+  "video": {
+    "enabled": false
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "mode": "on",
+  "diffViewMode": "auto",
+  "diffIndicatorMode": "bars",
+  "diffSplitMinWidth": 120,
+  "editDiffCollapsedLines": 24,
+  "writeDiffCollapsedLines": 0,
+  "diffWordWrap": true,
+  "enableSessionReference": true,
+  "enableSubagentAutocomplete": true
+}

@@ -1,0 +1,16 @@
+{
+  "defaultProvider": "csi-provider",
+  "defaultModel": "Qwen3.7-Max",
+  "defaultThinkingLevel": "high",
+  "enableInstallTelemetry": false,
+  "hideThinkingBlock": true,
+  "showCacheMissNotices": true,
+  "theme": "dracula",
+  "packages": [
+    "npm:@firstpick/pi-themes-bundle",
+    "npm:pi-cc-extensions",
+    "npm:@ff-labs/pi-fff",
+    "npm:pi-hashline-edit",
+    "npm:pi-web-access"
+  ]
+}

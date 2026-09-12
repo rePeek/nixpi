@@ -23,6 +23,8 @@
       wrapper = wrappers.lib.evalModule module;
       devOptions = {
         agentDirDefault = "$HOME/.pi/agent-dev";
+        configDir = "$PWD/config";
+        configMode = "mutable";
       };
     in
     {
