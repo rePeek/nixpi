@@ -89,8 +89,13 @@ in
             if [ -f "$source" ]; then
               if [ "${config.configMode}" = "mutable" ]; then
                 # Mutable mode: symlink (changes persist to source)
-                rm -f "$target"
-                ln -sf "$source" "$target"
+                if [ -L "$target" ]; then
+                  rm "$target"
+                elif [ -e "$target" ]; then
+                  echo "pi: refusing to replace non-symlink config: $target" >&2
+                  exit 1
+                fi
+                ln -s "$source" "$target"
               else
                 # Seed mode: bootstrap copy (only if missing)
                 if [ ! -e "$target" ]; then
