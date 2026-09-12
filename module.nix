@@ -18,10 +18,7 @@ let
   };
   runtimePackages = [ pkgs.coreutils ] ++ pluginMetadata.runtimePkgs;
   runtimeBinPath = lib.makeBinPath runtimePackages;
-  configFiles = [
-    "settings.json"
-    "themes/dracula.json"
-  ] ++ pluginMetadata.configFiles;
+  configFiles = [ "settings.json" ] ++ pluginMetadata.configFiles;
 
   linkConfig = relativePath: ''
     if [ ! -f "$PI_CONFIG_DIR/${relativePath}" ]; then

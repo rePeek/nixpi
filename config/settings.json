@@ -7,9 +7,10 @@
   "showCacheMissNotices": true,
   "theme": "dracula",
   "packages": [
+    "npm:@firstpick/pi-themes-bundle",
+    "npm:pi-cc-extensions",
     "npm:@ff-labs/pi-fff",
     "npm:pi-hashline-edit",
-    "npm:pi-tool-display",
     "npm:pi-web-access"
   ]
 }
