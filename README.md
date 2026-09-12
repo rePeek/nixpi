@@ -34,11 +34,10 @@
 |------|--------|
 | Pi 可执行文件 | Nix (`pkgs.pi-coding-agent`) |
 | Node.js / npm | Nix (`pkgs.nodejs`) |
-| 系统工具 (rg, git, coreutils) | Nix (integrations 声明) |
+| 系统工具 (git, rg, coreutils) | Nix (runtimePkgs) |
 | 配置源码 | Git repo (`config/`) |
 | 扩展安装与版本 | Pi (`packages` in settings.json) |
 | 运行时配置 | Pi (writable `~/.pi/agent/`) |
-| 环境变量 | Nix (integrations 声明) |
 
 ## 项目结构
 
@@ -46,10 +45,6 @@
 nixpi/
 ├── flake.nix              # Flake 入口
 ├── module.nix             # Wrapper 模块：runtime PATH + config management
-├── integrations/          # 每个扩展的 Nix 侧集成声明
-│   ├── default.nix
-│   ├── pi-hashline-edit.nix  # runtimePkgs: ripgrep
-│   └── pi-web-access.nix     # runtimePkgs: git
 └── config/                # 配置源码 (source of truth)
     ├── settings.json
     ├── pi-fff.json
@@ -137,27 +132,17 @@ git commit
 ```json
 {
   "packages": [
-    "npm:@firstpick/pi-themes-bundle@0.1.6",
-    "npm:pi-cc-extensions@0.8.70",
-    "npm:@ff-labs/pi-fff@0.10.6",
-    "npm:pi-hashline-edit@0.8.3",
-    "npm:pi-web-access@0.13.0"
+    "npm:@firstpick/pi-themes-bundle",
+    "npm:pi-cc-extensions",
+    "npm:@ff-labs/pi-fff",
+    "npm:pi-hashline-edit",
+    "npm:pi-web-access"
   ]
 }
 ```
 
-Pi 会在启动时自动安装这些扩展。带版本号的包会被 pin 到指定版本。
+Pi 会在启动时自动安装这些扩展。如需 pin 版本，加 `@x.y.z`。
 
-## Integrations
-
-每个 integration 文件描述扩展需要的 **Nix 侧** 需求：
-
-| Integration | runtimePkgs |
-|-------------|-------------|
-| `pi-hashline-edit` | `ripgrep` |
-| `pi-web-access` | `git` |
-
-添加新集成：在 `integrations/` 下创建 `.nix` 文件并加入 `default.nix` 列表。
 
 ## 工作流示例
 

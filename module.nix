@@ -11,17 +11,12 @@
   ...
 }:
 let
-  integrations = import ./integrations { inherit pkgs; };
-
-  integrationMetadata = {
-    env = lib.foldl' (acc: env: acc // env) { } (lib.catAttrs "env" integrations);
-    runtimePkgs = lib.concatLists (lib.catAttrs "runtimePkgs" integrations);
-  };
-
   runtimePackages = [
     pkgs.coreutils
     pkgs.nodejs
-  ] ++ integrationMetadata.runtimePkgs;
+    pkgs.git
+    pkgs.ripgrep
+  ];
 
   configFiles = [
     "settings.json"
@@ -71,9 +66,7 @@ in
     package = lib.mkDefault pkgs.pi-coding-agent;
     unsetVar = lib.mkDefault [ "DEV" ];
     runtimePkgs = map (pkg: { data = pkg; prefix = true; }) runtimePackages;
-    envDefault = integrationMetadata.env // {
-      PI_SKIP_VERSION_CHECK = "1";
-    };
+    envDefault.PI_SKIP_VERSION_CHECK = "1";
 
     runShell = [
       ''
