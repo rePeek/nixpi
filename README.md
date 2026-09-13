@@ -63,7 +63,16 @@ nixos-config/
 
 ## 配置管理
 
-配置文件从 `config/` 目录 symlink 到 `~/.pi/agent/`：
+配置文件从 checkout 的 `config/` 目录 symlink 到 `~/.pi/agent/`。默认 checkout
+位置是 `~/nixos-config/components/nixpi/config`；在其他位置使用时，设置
+`NIXPI_CONFIG_DIR`：
+
+```bash
+export NIXPI_CONFIG_DIR="$HOME/src/nixos-config/components/nixpi/config"
+```
+
+只有找不到该目录时，wrapper 才会使用 Nix store 中的只读快照，并向 stderr 输出提示。
+正常开发使用工作树路径，因此：
 
 - Pi 可以直接修改这些 JSON 文件
 - 修改立即出现在 `git diff`
