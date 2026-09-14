@@ -1,6 +1,6 @@
 {
-  "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-6.1-sol",
+  "defaultProvider": "csi-provider",
+  "defaultModel": "DeepSeek-V4.1-Flash",
   "defaultThinkingLevel": "high",
   "enableInstallTelemetry": false,
   "hideThinkingBlock": true,
