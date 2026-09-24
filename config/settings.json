@@ -1,6 +1,6 @@
 {
   "defaultProvider": "csi-provider",
-  "defaultModel": "Qwen3.8-Max",
+  "defaultModel": "DeepSeek-V4-Pro",
   "defaultThinkingLevel": "high",
   "enableInstallTelemetry": false,
   "hideThinkingBlock": true,
