@@ -1,7 +1,7 @@
 {
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-6.1-sol",
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "medium",
   "enableInstallTelemetry": false,
   "hideThinkingBlock": true,
   "showCacheMissNotices": true,
