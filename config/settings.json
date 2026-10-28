@@ -5,13 +5,12 @@
   "enableInstallTelemetry": false,
   "hideThinkingBlock": true,
   "showCacheMissNotices": true,
-  "theme": "dracula",
+  "theme": "catppuccin-mocha",
   "packages": [
-    "npm:@firstpick/pi-themes-bundle",
-    "npm:pi-cc-extensions",
     "npm:@ff-labs/pi-fff",
     "npm:pi-hashline-edit",
-    "npm:pi-web-access"
+    "npm:pi-web-access",
+    "npm:pi-open-tui"
   ],
   "lastChangelogVersion": "1.1.0"
 }

@@ -22,6 +22,7 @@ let
     "hashline.json"
     "claude-code-style.json"
     "web-search.json"
+    "themes/catppuccin-mocha.json"
   ];
 
   storeConfigDir = toString ./config;
@@ -54,6 +55,7 @@ in
           target="$PI_CODING_AGENT_DIR/$file"
           source="$PI_CONFIG_DIR/$file"
           if [ -f "$source" ]; then
+            mkdir -p "$(dirname "$target")"
             if [ -L "$target" ]; then
               rm "$target"
             elif [ -e "$target" ]; then
